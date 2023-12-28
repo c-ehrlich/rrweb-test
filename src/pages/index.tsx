@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
-import { record } from "rrweb";
+import { record, pack, unpack } from "rrweb";
 
 import { api } from "~/utils/api";
 
@@ -81,7 +81,10 @@ function RRWebPlayback(props: { events: any }) {
 
   useEffect(() => {
     if (ref.current) {
-      console.log(JSON.stringify(props.events).length, "characters");
+      console.log(`${JSON.stringify(props.events).length} characters unpacked`);
+      console.log(
+        `${JSON.stringify(pack(props.events)).length} characters packed`,
+      );
       const player = new rrwebPlayer({
         target: ref.current,
         props,
