@@ -1,10 +1,39 @@
 import Head from "next/head";
-import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+import { record } from "rrweb";
 
 import { api } from "~/utils/api";
 
+import rrwebPlayer from "rrweb-player";
+import "rrweb-player/dist/style.css";
+
 export default function Home() {
-  const hello = api.post.hello.useQuery({ text: "from tRPC" });
+  const [count, setCount] = useState(0);
+  const [lastRecording, setLastRecording] = useState<any>(null);
+
+  const rrwebRef = useRef(null);
+  const eventsRef = useRef([]);
+
+  // console.log("rrweb", rrweb);
+
+  const handleStartRecording = () => {
+    rrwebRef.current = record({
+      emit: (event) => {
+        eventsRef.current.push(event);
+      },
+      sampling: {
+        mousemove: true,
+        mouseInteraction: true,
+      },
+    });
+  };
+
+  const handleStopecording = () => {
+    rrwebRef.current?.();
+    console.log("events:", eventsRef.current);
+    setLastRecording(eventsRef.current);
+    eventsRef.current = [];
+  };
 
   return (
     <>
@@ -16,37 +45,60 @@ export default function Home() {
       <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
         <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
           <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
-            Create <span className="text-[hsl(280,100%,70%)]">T3</span> App
+            rrweb test
           </h1>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-              href="https://create.t3.gg/en/usage/first-steps"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">First Steps →</h3>
-              <div className="text-lg">
-                Just the basics - Everything you need to know to set up your
-                database and authentication.
-              </div>
-            </Link>
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-              href="https://create.t3.gg/en/introduction"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">Documentation →</h3>
-              <div className="text-lg">
-                Learn more about Create T3 App, the libraries it uses, and how
-                to deploy it.
-              </div>
-            </Link>
+          <input type="text" className="bg-slate-300 p-4" />
+          <button
+            className="bg-slate-300 p-4"
+            onClick={() => setCount((c) => c + 1)}
+          >
+            Count is {count}
+          </button>
+          <div className="flex">
+            {count > 0 ? (
+              new Array(count).fill(false).map((_, i) => <div>item {i}</div>)
+            ) : (
+              <div>no items</div>
+            )}
           </div>
-          <p className="text-2xl text-white">
-            {hello.data ? hello.data.greeting : "Loading tRPC query..."}
-          </p>
+          <div className="flex gap-4">
+            <button className="bg-slate-300 p-4" onClick={handleStartRecording}>
+              Record
+            </button>
+            <button className="bg-slate-300 p-4" onClick={handleStopecording}>
+              Stop
+            </button>
+          </div>
+          {lastRecording && <RRWebPlayback events={lastRecording} />}
         </div>
       </main>
     </>
+  );
+}
+
+function RRWebPlayback(props: { events: any }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (ref.current) {
+      console.log(JSON.stringify(props.events).length, "characters");
+      const player = new rrwebPlayer({
+        target: ref.current,
+        props,
+      });
+    }
+
+    return () => {
+      if (ref.current) {
+        ref.current.innerHTML = "";
+      }
+    };
+  }, []);
+
+  return (
+    <div>
+      <p>player</p>
+      <div ref={ref}></div>
+    </div>
   );
 }
