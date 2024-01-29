@@ -85,6 +85,7 @@ function RRWebPlayback(props: { events: any }) {
       console.log(
         `${JSON.stringify(pack(props.events)).length} characters packed`,
       );
+      console.log(JSON.stringify(pack(props.events)));
       const player = new rrwebPlayer({
         target: ref.current,
         props,
